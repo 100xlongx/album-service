@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -40,8 +42,12 @@ func postAlbums(c *gin.Context) {
 	var newAlbum album
 
 	if err := c.BindJSON(&newAlbum); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
+
+	newID := strconv.Itoa(len(albums) + 1)
+	newAlbum.ID = newID
 
 	albums = append(albums, newAlbum)
 
@@ -50,9 +56,15 @@ func postAlbums(c *gin.Context) {
 
 func main() {
 	router := gin.Default()
+
+	router.Use(gin.Logger())
+	router.Use(gin.Recovery())
+
 	router.GET("/albums", getAlbums)
 	router.GET("/albums/:id", getAlbumById)
 	router.POST("/albums", postAlbums)
 
-	router.Run("localhost:8080")
+	port := "8080"
+
+	router.Run(fmt.Sprintf("localhost:%s", port))
 }
